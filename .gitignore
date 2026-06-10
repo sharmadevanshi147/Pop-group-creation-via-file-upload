@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local editor / OS files
+.DS_Store
+.claude/
+
+# Backups
+*.bak
