@@ -40,7 +40,7 @@ import ChatView            from './components/ChatView.jsx';
 import { ACTION_TYPES }    from './components/constants.js';
 import SectionAccordion   from './components/SectionAccordion.jsx';
 import FileChipCard        from './components/FileChipCard.jsx';
-import { TableIcon, RetryIcon, MiniCloseIcon } from './components/icons.jsx';
+import { TableIcon, RetryIcon, MiniCloseIcon, ExpandIcon } from './components/icons.jsx';
 import { FOLD_DB, FOLD_DB_MAP } from './constants/fold-db.js';
 import { parseXlsxDate, fmtAge } from './utils/formatters.js';
 import { PopulationGroupsView } from './PopulationGroupsView.jsx';
@@ -54,11 +54,6 @@ const PROC_STEPS = [
   'Matching Patient IDs with Fold Patients',
 ];
 
-const ExpandIcon = ({ size = 16, color = 'currentColor' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="9 18 15 12 9 6"/>
-  </svg>
-);
 
 /* ─── Custom SVG Icons ───────────────────────────────────────────────────── */
 const TaskIcon = ({ color = 'currentColor', size = 16 }) => (

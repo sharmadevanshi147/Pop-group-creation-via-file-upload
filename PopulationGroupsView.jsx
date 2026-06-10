@@ -24,28 +24,12 @@ import {
 
 import SectionAccordion   from './components/SectionAccordion.jsx';
 import FileChipCard        from './components/FileChipCard.jsx';
-import { TableIcon, RetryIcon, MiniCloseIcon } from './components/icons.jsx';
+import { TableIcon, RetryIcon, MiniCloseIcon, Spinner, ZapIcon, CollapseIcon, ReplaceIcon, FileErrorIllustration, CheckRoundIcon } from './components/icons.jsx';
 import DeleteConfirmModal  from './components/DeleteConfirmModal.jsx';
 import PaginationBar       from './components/PaginationBar.jsx';
 import { FOLD_DB, FOLD_DB_MAP } from './constants/fold-db.js';
 import { parseXlsxDate, fmtAge } from './utils/formatters.js';
 
-/* Inline stubs for components not yet extracted */
-const Spinner = ({ size = 16, color = 'currentColor' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
-    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-  </svg>
-);
-const ZapIcon = ({ size = 16, color = 'currentColor' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-  </svg>
-);
-const CollapseIcon = ({ size = 16, color = 'currentColor' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6"/>
-  </svg>
-);
 
 /* ─── Population Groups — data ───────────────────────────────────────────── */
 const POP_GROUPS = [
@@ -161,220 +145,6 @@ function DrawerSelect({ value, onChange, options, placeholder, disabled = false,
         </div>
       )}
       {hint && <div style={{ fontSize:12, color:'var(--neutral-200)', marginTop:4 }}>{hint}</div>}
-    </div>
-  );
-}
-
-/* ─── Reusable patient portal dropdown (used in Match To column) ─────────── */
-function PatientPortalDD({ entry, patDDRect, patSearch, setPatSearch, matchSummary, manualSel, setManualSel, setPatDDOpen }) {
-  return (
-    <div data-patdd-portal="1" onMouseDown={e => e.stopPropagation()}
-      style={{ position:'fixed', top: patDDRect.bottom + 4, right: window.innerWidth - patDDRect.right, width:260, background:'#fff', border:'0.5px solid var(--neutral-100)', borderRadius:8, boxShadow:'0 4px 20px rgba(0,0,0,0.12)', zIndex:9999, overflow:'hidden' }}>
-      {/* Search */}
-      <div style={{ padding:'6px 8px', borderBottom:'0.5px solid var(--neutral-100)' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:5, height:26, padding:'0 7px', border:'0.5px solid var(--neutral-200)', borderRadius:5, background:'var(--neutral-0)' }}>
-          <MagniferLinear size={11} color="var(--neutral-200)" />
-          <input
-            value={patSearch}
-            onChange={e => setPatSearch(e.target.value)}
-            placeholder="Search patient…"
-            autoFocus
-            className="pat-search-input"
-            style={{ flex:1, border:'none', background:'transparent', fontSize:14, color:'var(--neutral-400)', fontFamily:'Inter, sans-serif', outline:'none' }}
-          />
-        </div>
-      </div>
-      {/* Patient list */}
-      <div style={{ maxHeight:200, overflowY:'auto' }} className="thin-scroll">
-        {FOLD_DB.filter(p => {
-          const alreadyMatched     = matchSummary.matched.some(m => m.id === p.id);
-          const assignedElsewhere  = Object.entries(manualSel).some(([eid, sel]) => eid !== entry.entryId && sel?.id === p.id);
-          if (alreadyMatched || assignedElsewhere) return false;
-          if (!patSearch) return true;
-          return p.name.toLowerCase().includes(patSearch.toLowerCase()) || p.id.toLowerCase().includes(patSearch.toLowerCase());
-        }).map(p => {
-          const initials    = p.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
-          const isSelected  = manualSel[entry.entryId]?.id === p.id;
-          return (
-            <div key={p.id}
-              onClick={() => { setManualSel(s=>({...s,[entry.entryId]:p})); setPatDDOpen(null); setPatSearch(''); }}
-              style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 10px', cursor:'pointer', background: isSelected ? 'var(--primary-50)' : '#fff', border: isSelected ? '0.5px solid var(--primary-200)' : '0.5px solid transparent', margin:'2px 4px', borderRadius:5, transition:'background 0.1s' }}
-              onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background='var(--neutral-50)'; }}
-              onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background='#fff'; }}>
-              <div style={{ width:28, height:28, borderRadius:4, background:'var(--primary-100)', border:'0.5px solid var(--primary-200)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:400, color:'var(--primary-300)', flexShrink:0 }}>
-                {initials}
-              </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:14, fontWeight:400, color:'var(--neutral-400)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.name}</div>
-                <div style={{ fontSize:12, color:'var(--neutral-200)', marginTop:1 }}>{p.id}</div>
-              </div>
-              {isSelected && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary-300)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* TableIcon, RetryIcon, MiniCloseIcon — imported from ./components/icons.jsx */
-
-const SyncIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
-  </svg>
-);
-const UploadCloudIcon = ({ size = 32, color = 'currentColor' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
-    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-  </svg>
-);
-const FileIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <polyline points="14 2 14 8 20 8"/>
-  </svg>
-);
-const MiniCheck = () => (
-  <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-    <path d="M1 3L3 5.5L7 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-/* ─── File Processing Summary section components ──────────────────────────── */
-
-function MatchedSection({ patients, expanded, onToggle }) {
-  return (
-    <div style={{ border:'0.5px solid rgba(21,128,61,0.2)', borderRadius:8, marginBottom:10, overflow:'visible' }}>
-      <div onClick={onToggle} style={{ padding:'10px 12px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', borderBottom: expanded ? '0.5px solid rgba(21,128,61,0.2)' : 'none', background:'linear-gradient(90deg, #f0fdf4 0%, #dcfce7 100%)', borderRadius: expanded ? '8px 8px 0 0' : 8 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e', flexShrink:0 }} />
-          <span style={{ fontSize:14, fontWeight:500, color:'var(--neutral-400)' }}>Matched &amp; Added Patients</span>
-          <span style={{ fontSize:14, color:'#16a34a', background:'#dcfce7', padding:'1px 7px', borderRadius:10, fontWeight:500, border:'0.5px solid rgba(21,128,61,0.2)' }}>{patients.length}</span>
-        </div>
-        <AltArrowDownLinear size={12} color="var(--neutral-300)" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition:'transform 0.15s' }} />
-      </div>
-      {expanded && patients.map((p, i) => (
-        <div key={p.id} style={{ display:'flex', alignItems:'center', gap:9, padding:'8px 12px', borderBottom: i < patients.length-1 ? '0.5px solid var(--neutral-100)' : 'none', background:'var(--neutral-0)' }}>
-          <div style={{ width:28, height:28, borderRadius:4, background:'var(--primary-100)', border:'0.5px solid var(--primary-200)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:400, color:'var(--primary-300)', flexShrink:0 }}>
-            {p.name.split(' ').map(n=>n[0]).join('').slice(0,2)}
-          </div>
-          <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:13, color:'var(--neutral-400)', fontWeight:400, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.name}</div>
-            <div style={{ fontSize:12, color:'var(--neutral-200)', marginTop:1 }}>DOB: {p.dob} · {p.mrn}</div>
-          </div>
-          <div style={{ width:16, height:16, borderRadius:'50%', background:'#009B53', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-            <MiniCheck />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function NotFoundSection({ entries, expanded, onToggle, manualSel, setManualSel, patDDOpen, setPatDDOpen, patDDRect, setPatDDRect, patSearch, setPatSearch, matchSummary }) {
-  const COL = '28px 140px 160px 110px 80px 1fr';
-  const HDRS = ['#', 'Patient ID', 'First Name', 'Last Name', 'DOB', 'Match To'];
-  return (
-    <div style={{ border:'0.5px solid #fecaca', borderRadius:8, overflow:'visible', marginBottom:10 }}>
-      <div onClick={onToggle} style={{ padding:'9px 12px', background:'linear-gradient(90deg, #fef2f2 0%, #fee2e2 100%)', borderBottom: expanded ? '0.5px solid #fecaca' : 'none', borderRadius: expanded ? '8px 8px 0 0' : 8, display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <div style={{ width:8, height:8, borderRadius:'50%', background:'#ef4444', flexShrink:0 }} />
-          <span style={{ fontSize:14, fontWeight:500, color:'var(--neutral-400)' }}>Not Found</span>
-          <span style={{ fontSize:14, color:'#dc2626', background:'#fef2f2', padding:'1px 7px', borderRadius:10, fontWeight:500, border:'0.5px solid rgba(220,38,38,0.2)' }}>{entries.length}</span>
-        </div>
-        <AltArrowDownLinear size={12} color="var(--neutral-300)" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition:'transform 0.15s' }} />
-      </div>
-      {expanded && (
-        <div style={{ overflowX:'auto' }} className="thin-scroll">
-          <div style={{ display:'grid', gridTemplateColumns:COL, padding:'5px 12px', background:'var(--neutral-50)', borderBottom:'0.5px solid var(--neutral-150)', gap:8, minWidth:600 }}>
-            {HDRS.map((h,hi) => <div key={hi} style={{ fontSize:12, fontWeight:500, color:'var(--neutral-300)', lineHeight:1.4 }}>{h}</div>)}
-          </div>
-          {entries.map((entry, i) => {
-            const parts = entry.rawName ? entry.rawName.split(/\s+/) : [];
-            const firstName = parts[0] || '—';
-            const lastName  = parts.slice(1).join(' ') || '—';
-            const sel = manualSel[entry.entryId];
-            return (
-              <div key={entry.entryId}
-                style={{ display:'grid', gridTemplateColumns:COL, padding:'7px 12px', borderBottom: i < entries.length-1 ? '0.5px solid var(--neutral-100)' : 'none', background: i%2===0 ? '#fff' : 'var(--neutral-0)', alignItems:'center', gap:8, minWidth:600, transition:'background 0.1s' }}
-                onMouseEnter={e => e.currentTarget.style.background='var(--primary-25)'}
-                onMouseLeave={e => e.currentTarget.style.background= i%2===0 ? '#fff' : 'var(--neutral-0)'}>
-                <div style={{ fontSize:13, color:'var(--neutral-200)' }}>{i+1}</div>
-                <div style={{ fontSize:13, color:'var(--neutral-400)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{entry.rawId}</div>
-                <div style={{ fontSize:13, color:'var(--neutral-300)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{firstName}</div>
-                <div style={{ fontSize:13, color:'var(--neutral-300)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{lastName}</div>
-                <div style={{ fontSize:13, color:'var(--neutral-300)' }}>—</div>
-                <div data-patdd="1" style={{ position:'relative', width:'100%' }}>
-                  <div onClick={e => { const rect = e.currentTarget.getBoundingClientRect(); setPatDDRect(rect); setPatDDOpen(p => p===entry.entryId ? null : entry.entryId); setPatSearch(''); }}
-                    style={{ height:24, padding:'0 8px', border:'0.5px solid var(--neutral-100)', borderRadius:5, background:'#fff', display:'flex', alignItems:'center', gap:4, cursor:'pointer', fontSize:13, boxSizing:'border-box', width:'100%' }}>
-                    <span style={{ flex:1, color: sel ? 'var(--neutral-400)' : 'var(--neutral-200)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontWeight:400 }}>
-                      {sel?.name || 'Select patient…'}
-                    </span>
-                    <AltArrowDownLinear size={10} color="var(--neutral-200)" />
-                  </div>
-                  {patDDOpen === entry.entryId && patDDRect && ReactDOM.createPortal(
-                    <PatientPortalDD entry={entry} patDDRect={patDDRect} patSearch={patSearch} setPatSearch={setPatSearch} matchSummary={matchSummary} manualSel={manualSel} setManualSel={setManualSel} setPatDDOpen={setPatDDOpen} />,
-                    document.body
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DuplicateSection({ entries, expanded, onToggle, onRemove }) {
-  const COL = '28px 140px 160px 110px 80px 1fr';
-  const HDRS = ['#', 'Patient ID', 'First Name', 'Last Name', 'DOB', ''];
-  return (
-    <div style={{ border:'0.5px solid rgba(217,165,11,0.2)', borderRadius:8, overflow:'visible', marginBottom:10 }}>
-      <div onClick={onToggle} style={{ padding:'9px 12px', background:'linear-gradient(90deg, #FFFCF5 0%, #FEF9E6 100%)', borderBottom: expanded ? '0.5px solid rgba(217,165,11,0.2)' : 'none', borderRadius: expanded ? '8px 8px 0 0' : 8, display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <div style={{ width:8, height:8, borderRadius:'50%', background:'#D9A50B', flexShrink:0 }} />
-          <span style={{ fontSize:14, fontWeight:500, color:'var(--neutral-400)' }}>Duplicate Entries</span>
-          <span style={{ fontSize:14, color:'#D9A50B', background:'#FFFCF5', padding:'1px 7px', borderRadius:10, fontWeight:500, border:'0.5px solid rgba(217,165,11,0.2)' }}>{entries.length}</span>
-        </div>
-        <AltArrowDownLinear size={12} color="var(--neutral-300)" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition:'transform 0.15s' }} />
-      </div>
-      {expanded && (
-        <div style={{ overflowX:'auto' }} className="thin-scroll">
-          <div style={{ display:'grid', gridTemplateColumns:COL, padding:'5px 12px', background:'var(--neutral-50)', borderBottom:'0.5px solid var(--neutral-150)', gap:8, minWidth:600 }}>
-            {HDRS.map((h,hi) => <div key={hi} style={{ fontSize:12, fontWeight:500, color:'var(--neutral-300)', lineHeight:1.4 }}>{h}</div>)}
-          </div>
-          {entries.map((entry, i) => {
-            const db = entry.dbPat || {};
-            const parts = (db.name || entry.rawName || '').split(/\s+/);
-            const firstName = parts[0] || '—';
-            const lastName  = parts.slice(1).join(' ') || '—';
-            return (
-              <div key={entry.entryId}
-                style={{ display:'grid', gridTemplateColumns:COL, padding:'7px 12px', borderBottom: i < entries.length-1 ? '0.5px solid var(--neutral-100)' : 'none', background: i%2===0 ? '#fff' : 'var(--neutral-0)', alignItems:'center', gap:8, minWidth:600, transition:'background 0.1s' }}
-                onMouseEnter={e => e.currentTarget.style.background='var(--primary-25)'}
-                onMouseLeave={e => e.currentTarget.style.background= i%2===0 ? '#fff' : 'var(--neutral-0)'}>
-                <div style={{ fontSize:13, color:'var(--neutral-200)' }}>{i+1}</div>
-                <div style={{ fontSize:13, color:'var(--neutral-400)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{entry.rawId}</div>
-                <div style={{ fontSize:13, color:'var(--neutral-300)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{firstName}</div>
-                <div style={{ fontSize:13, color:'var(--neutral-300)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{lastName}</div>
-                <div style={{ fontSize:13, color:'var(--neutral-300)' }}>{db.dob || '—'}</div>
-                <div style={{ display:'flex', justifyContent:'flex-start' }}>
-                  <button
-                    onClick={() => onRemove(entry.entryId)}
-                    style={{ height:26, padding:'0 10px', border:'0.5px solid var(--neutral-150)', borderRadius:5, background:'#fff', color:'var(--neutral-300)', fontSize:12, fontWeight:500, cursor:'pointer', fontFamily:'Inter, sans-serif', whiteSpace:'nowrap', transition:'background 0.15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background='var(--neutral-50)'}
-                    onMouseLeave={e => e.currentTarget.style.background='#fff'}>
-                    Remove Duplicate
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
@@ -851,150 +621,82 @@ function PreviewPanel({ patients, onBack }) {
   );
 }
 
-/* parseXlsxDate — imported from ./utils/formatters.js */
-
-/* ─── Table-upload editable row ─────────────────────────────────────────── */
-function TableRow({ row, serial, isDup, matchedPatient, onChange, onDelete }) {
-  const status = isDup ? 'duplicate' : matchedPatient ? 'matched' : 'not-found';
-  const GRID   = '40px 140px 104px 130px 120px 108px 1fr 52px';
-
-  const badge = status === 'matched'
-    ? <span style={{ fontSize:11, fontWeight:500, color:'#16a34a', background:'#dcfce7', padding:'2px 8px', borderRadius:10, border:'0.5px solid rgba(21,128,61,0.2)', whiteSpace:'nowrap' }}>Matched</span>
-    : status === 'not-found'
-    ? <span style={{ fontSize:11, fontWeight:500, color:'#dc2626', background:'#fef2f2', padding:'2px 8px', borderRadius:10, border:'0.5px solid rgba(220,38,38,0.2)', whiteSpace:'nowrap' }}>Not Found</span>
-    : <span style={{ fontSize:11, fontWeight:500, color:'#D9A50B', background:'#FEF9E6', padding:'2px 8px', borderRadius:10, border:'0.5px solid rgba(217,165,11,0.2)', whiteSpace:'nowrap' }}>Duplicate</span>;
-
-  const cell = { borderRight:'0.5px solid var(--neutral-100)', padding:'0 10px', display:'flex', alignItems:'center', minHeight:52 };
-  const bg   = isDup ? '#FFFCF5' : status === 'not-found' ? '#FFFAFA' : '#fff';
-  const inp  = (borderColor = 'var(--neutral-150)') => ({
-    width:'100%', height:28, border:`0.5px solid ${borderColor}`, borderRadius:4,
-    padding:'0 8px', fontSize:13, color:'var(--neutral-400)',
-    fontFamily:'Inter, sans-serif', outline:'none', background:'#fff',
-  });
-
+/* ─── NewModePanel — "Download Errors" Create Group flow ─────────────────── */
+/* Reusable uploaded-file preview row — table-icon avatar + name/size + replace action.
+   Shared by the processing view and the all-members-matched summary (Figma 2023:9490). */
+function FilePreviewCard({ fileName, sizeMB, onReplace }) {
   return (
-    <div style={{ display:'grid', gridTemplateColumns:GRID, borderBottom:'0.5px solid var(--neutral-100)', background:bg }}>
-      {/* # */}
-      <div style={{ ...cell, justifyContent:'center' }}>
-        <span style={{ fontSize:12, color:'var(--neutral-300)', fontWeight:500 }}>{serial}</span>
+    <div style={{ display:'flex', alignItems:'center', gap:16, padding:12, border:'0.5px solid var(--neutral-150)', borderRadius:8, background:'#fff', width:'100%', boxSizing:'border-box', flexShrink:0 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8, flex:'1 0 0', minWidth:0 }}>
+        <div style={{ width:32, height:32, borderRadius:8, background:'var(--neutral-50)', border:'0.5px solid var(--neutral-200)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <TableIcon color="var(--neutral-300)" size={18} />
+        </div>
+        <div style={{ flex:'1 0 0', minWidth:0 }}>
+          <div style={{ fontSize:14, fontWeight:500, color:'var(--neutral-400)', lineHeight:1.2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{fileName}</div>
+          <div style={{ fontSize:14, fontWeight:400, color:'var(--neutral-200)', lineHeight:1.2, marginTop:2 }}>{sizeMB} MB</div>
+        </div>
       </div>
-      {/* Fold ID */}
-      <div style={cell}>
-        <input value={row.foldId}
-          onChange={e => onChange(row.rowId, 'foldId', e.target.value)}
-          style={inp(status === 'not-found' ? '#fecaca' : status === 'duplicate' ? 'rgba(217,165,11,0.4)' : 'var(--neutral-150)')}
-          placeholder="Patient ID…"
-        />
-      </div>
-      {/* Status */}
-      <div style={cell}>{badge}</div>
-      {/* First Name */}
-      <div style={cell}>
-        <input value={row.firstName} onChange={e => onChange(row.rowId, 'firstName', e.target.value)} style={inp()} />
-      </div>
-      {/* Last Name */}
-      <div style={cell}>
-        <input value={row.lastName} onChange={e => onChange(row.rowId, 'lastName', e.target.value)} style={inp()} />
-      </div>
-      {/* DOB */}
-      <div style={cell}>
-        <input value={row.dob} onChange={e => onChange(row.rowId, 'dob', e.target.value)} style={inp()} placeholder="YYYY-MM-DD" />
-      </div>
-      {/* Matched Patient */}
-      <div style={{ ...cell, gap:8 }}>
-        {matchedPatient ? (
-          <>
-            <div style={{ width:30, height:30, borderRadius:4, background:'var(--primary-100)', border:'0.5px solid var(--primary-200)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:500, color:'var(--primary-300)', flexShrink:0 }}>
-              {matchedPatient.name.split(' ').map(n=>n[0]).join('').slice(0,2)}
-            </div>
-            <div style={{ minWidth:0 }}>
-              <div style={{ fontSize:13, color:'var(--neutral-400)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{matchedPatient.name}</div>
-              <div style={{ fontSize:11, color:'var(--neutral-200)' }}>{matchedPatient.id}</div>
-            </div>
-          </>
-        ) : (
-          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-            <DangerCircleLinear size={14} color="#ef4444" />
-            <span style={{ fontSize:12, color:'#ef4444' }}>Enter correct Patient ID</span>
-          </div>
-        )}
-      </div>
-      {/* Delete */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <button onClick={() => onDelete(row.rowId)}
-          style={{ width:28, height:28, border:'none', background:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', borderRadius:4, color:'var(--neutral-200)', transition:'all 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.background='#fef2f2'; e.currentTarget.style.color='#ef4444'; }}
-          onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color='var(--neutral-200)'; }}>
-          <TrashBinMinimalisticLinear size={14} />
+      {onReplace && (
+        <button onClick={onReplace} title="Replace file"
+          style={{ width:28, height:28, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, border:'none', background:'none', cursor:'pointer', borderRadius:4, transition:'background 0.1s' }}
+          onMouseEnter={e => e.currentTarget.style.background='var(--neutral-75)'}
+          onMouseLeave={e => e.currentTarget.style.background='none'}>
+          <ReplaceIcon size={16} color="var(--neutral-300)" />
         </button>
-      </div>
+      )}
     </div>
   );
 }
 
-function TableEditView() { /* TableEditView removed */ }
-
-/* EnhancedSummaryView removed */
-function EnhancedSummaryView() { /* EnhancedSummaryView removed */ }
-
-/* SmartSummaryView removed */
-function SmartSummaryView() { /* SmartSummaryView removed */ }
-
-
-/* ─── NewModePanel — "Download Errors" Create Group flow ─────────────────── */
-/* 80×80 red "list document" illustration — matches Figma node 1433:10245 (tinted #d72825) */
-function FileErrorIllustration() {
+/* All-members-matched review state (Figma 2023:9479) — file preview + collapsible matched list. */
+function AllMatchedPanel({ matched, uploadFile, onReupload }) {
   return (
-    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Document body with folded top-right corner */}
-      <path d="M16 12a4 4 0 0 1 4-4h26l18 18v42a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V12Z" fill="#FBDBDB" />
-      {/* Folded corner */}
-      <path d="M46 8l18 18H50a4 4 0 0 1-4-4V8Z" fill="#F3A8A8" />
-      {/* List rows — square bullet + line, red */}
-      <rect x="26" y="36" width="6"  height="6" rx="1.5" fill="#D72825" />
-      <rect x="36" y="37" width="20" height="4" rx="2"   fill="#D72825" />
-      <rect x="26" y="48" width="6"  height="6" rx="1.5" fill="#D72825" />
-      <rect x="36" y="49" width="20" height="4" rx="2"   fill="#D72825" />
-      <rect x="26" y="60" width="6"  height="6" rx="1.5" fill="#D72825" />
-      <rect x="36" y="61" width="14" height="4" rx="2"   fill="#D72825" />
-    </svg>
-  );
-}
+    <div style={{ display:'flex', flexDirection:'column', gap:16, fontFamily:'Inter, sans-serif', width:'100%', height:'100%', minHeight:0, boxSizing:'border-box', paddingTop:4 }}>
+      <p style={{ margin:0, fontSize:16, fontWeight:500, lineHeight:1.2, color:'#16181d', flexShrink:0 }}>File Processing Summary</p>
 
-function NewModePanel({ matchSummary, uploadFile, csvAllClear }) {
-  // All entries matched — show review state
-  if (csvAllClear && matchSummary.matched.length > 0) {
-    return (
-      <div style={{ padding:'16px', fontFamily:'Inter,sans-serif' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16, padding:'12px 14px', background:'#f0fdf4', border:'0.5px solid #bbf7d0', borderRadius:8 }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ flexShrink:0 }}>
-            <circle cx="9" cy="9" r="9" fill="#009b53"/>
-            <path d="M5 9l3 3 5-5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span style={{ fontSize:14, fontWeight:600, color:'#15803d' }}>All Entries Matched — Review Pop Group</span>
+      {uploadFile && (
+        <FilePreviewCard fileName={uploadFile.name} sizeMB={(uploadFile.size/1048576).toFixed(1)} onReplace={onReupload} />
+      )}
+
+      {/* Review pop group — fixed header + internally-scrolling patient list */}
+      <div style={{ border:'0.5px solid var(--neutral-150)', borderRadius:8, background:'#fff', overflow:'hidden', width:'100%', flex:'1 1 0', minHeight:0, display:'flex', flexDirection:'column' }}>
+        <div style={{ display:'flex', alignItems:'center', padding:'8px 12px', borderBottom:'0.5px solid var(--neutral-150)', background:'linear-gradient(90deg, #f5fffa 0%, #ffffff 100%)', flexShrink:0 }}>
+          <span style={{ fontSize:14, fontWeight:500, color:'var(--neutral-400)', lineHeight:1.2 }}>All Members Matched; Review Pop Group</span>
         </div>
-        <div className="thin-scroll" style={{ maxHeight:400, overflowY:'auto' }}>
-          {matchSummary.matched.map((p, i) => {
-            const initials = p.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+
+        {/* Matched member rows — scrolls within this section only */}
+        <div className="thin-scroll" style={{ flex:'1 1 0', minHeight:0, overflowY:'auto' }}>
+          {matched.map((p, i) => {
+            const initials = (p.name || '').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
             return (
-              <div key={p.id || i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderBottom:'0.5px solid var(--neutral-100)', fontFamily:'Inter,sans-serif' }}>
-                <div style={{ width:28, height:28, borderRadius:4, background:'var(--primary-100)', border:'0.5px solid var(--primary-200)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:400, color:'var(--primary-300)', flexShrink:0 }}>
-                  {initials}
+              <div key={p.id || i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderBottom:'0.5px solid var(--neutral-100)' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, flex:'1 0 0', minWidth:0 }}>
+                  <div style={{ width:40, height:40, borderRadius:8, background:'var(--primary-50)', border:'0.5px solid var(--primary-200)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:16, fontWeight:400, color:'var(--primary-300)' }}>
+                    {initials}
+                  </div>
+                  <div style={{ flex:'1 0 0', minWidth:0 }}>
+                    <div style={{ fontSize:14, fontWeight:500, color:'var(--neutral-400)', lineHeight:1.2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.name}</div>
+                    <div style={{ display:'flex', alignItems:'center', gap:2, fontSize:14, fontWeight:400, color:'var(--neutral-200)', lineHeight:1.2, marginTop:4, whiteSpace:'nowrap', overflow:'hidden' }}>
+                      <span style={{ overflow:'hidden', textOverflow:'ellipsis' }}>{p.id}</span>
+                      <span>•</span>
+                      <span>{fmtAge(p.dob)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:14, fontWeight:500, color:'var(--neutral-400)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.name}</div>
-                  <div style={{ fontSize:12, color:'var(--neutral-200)' }}>{p.id} · {p.dob}</div>
-                </div>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink:0 }}>
-                  <circle cx="8" cy="8" r="8" fill="#009b53"/>
-                  <path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                <CheckRoundIcon size={24} />
               </div>
             );
           })}
         </div>
       </div>
-    );
+    </div>
+  );
+}
+
+function NewModePanel({ matchSummary, uploadFile, csvAllClear, onReupload }) {
+  // All entries matched — show review state
+  if (csvAllClear && matchSummary.matched.length > 0) {
+    return <AllMatchedPanel matched={matchSummary.matched} uploadFile={uploadFile} onReupload={onReupload} />;
   }
 
   // Has errors — show download panel
@@ -1052,10 +754,9 @@ function NewModePanel({ matchSummary, uploadFile, csvAllClear }) {
     URL.revokeObjectURL(url);
   };
 
-  const reuploadFile = () => {
-    const inp = document.querySelector('input[type="file"]');
-    if (inp) inp.click();
-  };
+  /* Reset back to the freshly-selected CSV-upload state (filter stays selected,
+     drawer collapses to single column, upload dropzone reappears under the field). */
+  const reuploadFile = () => { onReupload?.(); };
 
   return (
     /* Frame 1433:10239 — py-12, gap-8, column, items-start */
@@ -1498,16 +1199,16 @@ function PopulationGroupsView({ activeFilter, onToggleSidebar, onMiniBarOpen, mi
             </svg>
           </button>
 
-          {/* ── New "Download Errors" Create Group flow — green, primary CTA ── */}
+          {/* ── New "Download Errors" Create Group flow — neutral button ── */}
           <button onClick={openNewModal}
-            style={{ height:32, padding:'0 12px', background:'#16a34a', color:'#fff', border:'none', borderRadius:6, fontSize:13, fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontFamily:'Inter, sans-serif', transition:'background 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.background='#15803d'; }}
-            onMouseLeave={e => { e.currentTarget.style.background='#16a34a'; }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            style={{ height:32, padding:'0 12px', background:'var(--neutral-0)', color:'var(--neutral-300)', border:'0.5px solid var(--neutral-150)', borderRadius:6, fontSize:13, fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontFamily:'Inter, sans-serif', transition:'background 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background='var(--neutral-50)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background='var(--neutral-0)'; }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--neutral-300)" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Create Group
           </button>
 
-          {/* ── Secondary Create Group — grey/neutral, opens standard CSV flow ── */}
+          {/* ── Secondary Create Group — grey/neutral, opens standard CSV flow — commented out for now ──
           <button onClick={openModal}
             style={{ height:32, padding:'0 12px', background:'#fff', color:'var(--neutral-300)', border:'0.5px solid var(--neutral-150)', borderRadius:6, fontSize:13, fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontFamily:'Inter, sans-serif', transition:'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background='var(--neutral-50)'}
@@ -1519,6 +1220,7 @@ function PopulationGroupsView({ activeFilter, onToggleSidebar, onMiniBarOpen, mi
             </svg>
             Create Group
           </button>
+          */}
 
           {/* Import Rule — neutral button, no icon */}
           <button style={{ height:32, padding:'0 12px', border:'0.5px solid var(--neutral-150)', borderRadius:6, background:'#fff', color:'var(--neutral-300)', fontSize:13, fontWeight:500, cursor:'pointer', fontFamily:'Inter, sans-serif', transition:'background 0.15s' }}
@@ -1794,14 +1496,12 @@ function PopulationGroupsView({ activeFilter, onToggleSidebar, onMiniBarOpen, mi
                   /* Loading animation panel */
                   <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', padding:'16px', overflow:'hidden' }}>
                     {uploadFile && (
-                      <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', border:'0.5px solid var(--neutral-150)', borderRadius:8, background:'var(--neutral-0)', marginBottom:16, flexShrink:0 }}>
-                        <div style={{ width:28, height:28, borderRadius:4, background:'var(--primary-100)', border:'0.5px solid var(--primary-200)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                          <DocumentTextLinear size={14} color="var(--primary-300)" />
-                        </div>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:14, fontWeight:500, color:'var(--neutral-400)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{uploadFile.name}</div>
-                          <div style={{ fontSize:12, color:'var(--neutral-200)' }}>{(uploadFile.size/1048576).toFixed(1)} MB</div>
-                        </div>
+                      <div style={{ marginBottom:16 }}>
+                        <FilePreviewCard
+                          fileName={uploadFile.name}
+                          sizeMB={(uploadFile.size/1048576).toFixed(1)}
+                          onReplace={() => { setUploadFile(null); setUploadState('idle'); setUploadPct(0); setMatchSummary({ matched:[], notFound:[], duplicates:[] }); setManualSel({}); parsedRef.current = null; }}
+                        />
                       </div>
                     )}
                     <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20 }}>
@@ -1834,7 +1534,7 @@ function PopulationGroupsView({ activeFilter, onToggleSidebar, onMiniBarOpen, mi
                         style={{ height:32, padding:'0 14px', border:'0.5px solid var(--neutral-150)', borderRadius:6, background:'#fff', color:'var(--neutral-300)', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'Inter, sans-serif', display:'flex', alignItems:'center', gap:6, transition:'background 0.15s' }}
                         onMouseEnter={e => e.currentTarget.style.background='var(--neutral-50)'}
                         onMouseLeave={e => e.currentTarget.style.background='#fff'}>
-                        <CollapseIcon size={14} color="var(--neutral-300)" />
+                        <CollapseIcon size={16} color="var(--neutral-300)" />
                         Minimize
                       </button>
                     </div>
@@ -1847,6 +1547,7 @@ function PopulationGroupsView({ activeFilter, onToggleSidebar, onMiniBarOpen, mi
                         matchSummary={matchSummary}
                         uploadFile={uploadFile}
                         csvAllClear={csvAllClear}
+                        onReupload={() => { setUploadFile(null); setUploadState('idle'); setUploadPct(0); setMatchSummary({ matched:[], notFound:[], duplicates:[] }); setManualSel({}); parsedRef.current = null; }}
                       />
                     ) : (
                       <>
