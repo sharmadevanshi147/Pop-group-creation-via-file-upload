@@ -1862,7 +1862,7 @@ function PopulationGroupsView({ activeFilter, onToggleSidebar, onMiniBarOpen, mi
                 <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, width:'100%' }}>
                   <DangerCircleLinear size={18} color="#CF1322" strokeWidth={1} />
                   <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, width:'100%' }}>
-                    <span style={{ fontSize:16, fontWeight:500, color:'var(--neutral-400)', textAlign:'center' }}>Are you sure?</span>
+                    <span style={{ fontSize:16, fontWeight:500, color:'var(--neutral-400)', textAlign:'center' }}>Quit without saving?</span>
                     <p style={{ fontSize:14, color:'var(--neutral-200)', textAlign:'center', lineHeight:1.5, margin:0 }}>
                       You will need to reupload the file if you quit now. Any progress will be lost.
                     </p>
@@ -1883,7 +1883,7 @@ function PopulationGroupsView({ activeFilter, onToggleSidebar, onMiniBarOpen, mi
                     onMouseEnter={e => e.currentTarget.style.background='#FFE4E0'}
                     onMouseLeave={e => e.currentTarget.style.background='#FFF1F0'}
                   >
-                    Close Drawer
+                    Quit Anyway
                   </button>
                 </div>
               </div>
